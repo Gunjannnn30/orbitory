@@ -1,0 +1,563 @@
+// Orbitory database schema
+// PostgreSQL + Prisma. Business research records, sources, metrics, and user
+// collections. All relationships are explicit; nothing important lives in an
+// opaque JSON blob.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum CompanyStatus {
+  ACTIVE
+  ACQUIRED
+  CLOSED
+  IPO
+  UNKNOWN
+}
+
+enum OwnershipType {
+  PUBLIC
+  PRIVATE
+  SUBSIDIARY
+  UNKNOWN
+}
+
+enum BusinessModel {
+  SAAS
+  MARKETPLACE
+  SUBSCRIPTION
+  TRANSACTION
+  ADVERTISING
+  BROKERAGE
+  ECOMMERCE
+  FREEMIUM
+  OTHER
+}
+
+enum ResearchStatus {
+  UNRESEARCHED
+  PARTIAL
+  RESEARCHED
+  VERIFIED
+}
+
+enum EvidenceStatus {
+  VERIFIED
+  REPORTED
+  ESTIMATED
+  INTERPRETATION
+  ILLUSTRATIVE
+  UNKNOWN
+}
+
+enum ConfidenceLevel {
+  HIGH
+  MEDIUM
+  LOW
+}
+
+enum MetricValueType {
+  REPORTED
+  CALCULATED
+  ESTIMATED
+  ILLUSTRATIVE
+}
+
+enum SourceType {
+  COMPANY_FILING
+  COMPANY_ANNOUNCEMENT
+  COMPANY_DOCUMENTATION
+  REGULATORY_FILING
+  FOUNDER_INTERVIEW
+  BUSINESS_JOURNALISM
+  RESEARCH_PAPER
+  INDUSTRY_REPORT
+  CUSTOMER_FEEDBACK
+  OTHER
+}
+
+enum EventType {
+  FOUNDED
+  PRODUCT_LAUNCH
+  PIVOT
+  MARKET_EXPANSION
+  FUNDING
+  PARTNERSHIP
+  ACQUISITION
+  MERGER
+  LEADERSHIP_CHANGE
+  FAILURE
+  RECOVERY
+  CLOSURE
+  RESTRUCTURING
+  OTHER
+}
+
+enum RelationshipType {
+  DIRECT_COMPETITOR
+  INDIRECT_COMPETITOR
+  ALTERNATIVE
+  PARTNER
+  ACQUIRED_BY
+  ACQUIRED
+  INVESTOR
+  OTHER
+}
+
+enum ReportType {
+  COMPANY_INTELLIGENCE
+  PM_METRICS
+}
+
+enum ReportStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+enum CollectionVisibility {
+  PUBLIC
+  PRIVATE
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  username     String   @unique
+  name         String?
+  passwordHash String
+  avatarUrl    String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  settings      UserSettings?
+  sessions      Session[]
+  collections   UserCollection[]
+  comparisons   SavedComparison[]
+  reports       Report[]
+  researchEdits ResearchEdit[]
+
+  @@index([email])
+  @@index([username])
+  @@index([createdAt])
+}
+
+model UserSettings {
+  id            String   @id @default(cuid())
+  userId        String   @unique
+  theme         String   @default("dark") // dark | light | system
+  reducedMotion Boolean  @default(false)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  userId    String
+  userAgent String?
+  ip        String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Industry {
+  id               String   @id @default(cuid())
+  name             String
+  slug             String   @unique
+  description      String?
+  color            String? // hex, for galaxy visual identity
+  parentIndustryId String?
+  companyCount     Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  parent    Industry?         @relation("IndustryChildren", fields: [parentIndustryId], references: [id], onDelete: SetNull)
+  children  Industry[]        @relation("IndustryChildren")
+  companies CompanyIndustry[]
+  niches    Niche[]
+
+  @@index([slug])
+  @@index([parentIndustryId])
+}
+
+model Niche {
+  id           String   @id @default(cuid())
+  name         String
+  slug         String   @unique
+  description  String?
+  industryId   String
+  companyCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  industry  Industry       @relation(fields: [industryId], references: [id], onDelete: Cascade)
+  companies CompanyNiche[]
+
+  @@index([slug])
+  @@index([industryId])
+}
+
+model Company {
+  id               String         @id @default(cuid())
+  slug             String         @unique
+  name             String
+  description      String?
+  shortDescription String?
+  foundedAt        DateTime?
+  headquarters     String?
+  website          String?
+  logoUrl          String?
+  companyStatus    CompanyStatus  @default(UNKNOWN)
+  ownershipType    OwnershipType  @default(PRIVATE)
+  businessModel    BusinessModel  @default(OTHER)
+  researchStatus   ResearchStatus @default(UNRESEARCHED)
+  lastResearchedAt DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  industries         CompanyIndustry[]
+  niches             CompanyNiche[]
+  founders           CompanyFounder[]
+  products           Product[]
+  timelineEvents     TimelineEvent[]
+  strategicDecisions StrategicDecision[]
+  metrics            MetricObservation[]
+  claims             Claim[]
+  asCompetitor       CompetitorRelationship[] @relation("CompanyAsCompetitor")
+  competitors        CompetitorRelationship[] @relation("CompanyAsReference")
+  collections        CollectionItem[]
+  reports            Report[]
+  researchEdits      ResearchEdit[]
+
+  @@index([slug])
+  @@index([companyStatus])
+  @@index([businessModel])
+  @@index([researchStatus])
+  @@index([name])
+}
+
+model CompanyIndustry {
+  companyId  String
+  industryId String
+  assignedAt DateTime @default(now())
+
+  company  Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  industry Industry @relation(fields: [industryId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, industryId])
+}
+
+model CompanyNiche {
+  companyId  String
+  nicheId    String
+  assignedAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  niche   Niche   @relation(fields: [nicheId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, nicheId])
+}
+
+model Founder {
+  id        String   @id @default(cuid())
+  name      String
+  biography String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  companies CompanyFounder[]
+
+  @@index([name])
+}
+
+model CompanyFounder {
+  companyId String
+  founderId String
+  role      String? // e.g. "CEO & Co-founder"
+  joinedAt  DateTime?
+  leftAt    DateTime?
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  founder Founder @relation(fields: [founderId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, founderId])
+}
+
+model Product {
+  id           String    @id @default(cuid())
+  companyId    String
+  name         String
+  description  String?
+  status       String? // active | discontinued | beta | legacy
+  launchDate   DateTime?
+  pricingModel String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+}
+
+model TimelineEvent {
+  id             String         @id @default(cuid())
+  companyId      String
+  eventType      EventType
+  title          String
+  description    String?
+  eventDate      DateTime?
+  evidenceStatus EvidenceStatus @default(REPORTED)
+  sourceExcerpt  String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  company Company               @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sources TimelineEventSource[]
+
+  @@index([companyId])
+  @@index([eventDate])
+}
+
+model TimelineEventSource {
+  timelineEventId String
+  sourceId        String
+  context         String?
+
+  timelineEvent TimelineEvent @relation(fields: [timelineEventId], references: [id], onDelete: Cascade)
+  source        Source        @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([timelineEventId, sourceId])
+}
+
+model StrategicDecision {
+  id                String         @id @default(cuid())
+  companyId         String
+  title             String
+  context           String?
+  decision          String?
+  documentedOutcome String?
+  analysis          String? // researcher interpretation
+  limitations       String?
+  evidenceStatus    EvidenceStatus @default(INTERPRETATION)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  company Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sources StrategicDecisionSource[]
+
+  @@index([companyId])
+}
+
+model StrategicDecisionSource {
+  strategicDecisionId String
+  sourceId            String
+  context             String?
+
+  strategicDecision StrategicDecision @relation(fields: [strategicDecisionId], references: [id], onDelete: Cascade)
+  source            Source            @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([strategicDecisionId, sourceId])
+}
+
+model MetricDefinition {
+  id                       String   @id @default(cuid())
+  name                     String
+  slug                     String   @unique
+  category                 String // acquisition | activation | engagement | retention | monetization | revenue | profitability | customer-experience | ...
+  definition               String?
+  formula                  String?
+  unit                     String?
+  applicableBusinessModels String? // comma-separated business models
+  interpretation           String?
+  limitations              String?
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+
+  observations MetricObservation[]
+
+  @@index([slug])
+  @@index([category])
+}
+
+model MetricObservation {
+  id                 String          @id @default(cuid())
+  companyId          String
+  metricDefinitionId String
+  value              Decimal? // actual numeric value when calculable
+  valueText          String? // when the source only gives a textual figure
+  unit               String?
+  periodStart        DateTime?
+  periodEnd          DateTime?
+  reportedAt         DateTime? // when the source published the figure
+  valueType          MetricValueType @default(REPORTED)
+  notes              String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  company          Company                   @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  metricDefinition MetricDefinition          @relation(fields: [metricDefinitionId], references: [id], onDelete: Cascade)
+  sources          MetricObservationSource[]
+
+  @@index([companyId])
+  @@index([metricDefinitionId])
+  @@index([periodEnd])
+}
+
+model MetricObservationSource {
+  metricObservationId String
+  sourceId            String
+
+  metricObservation MetricObservation @relation(fields: [metricObservationId], references: [id], onDelete: Cascade)
+  source            Source            @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([metricObservationId, sourceId])
+}
+
+model Source {
+  id          String     @id @default(cuid())
+  url         String
+  title       String
+  publisher   String?
+  author      String?
+  publishedAt DateTime?
+  accessedAt  DateTime? // when we last retrieved it
+  sourceType  SourceType @default(OTHER)
+  createdAt   DateTime   @default(now())
+
+  timelineEvents     TimelineEventSource[]
+  strategicDecisions StrategicDecisionSource[]
+  metricObservations MetricObservationSource[]
+  claims             ClaimSource[]
+
+  @@index([url])
+}
+
+model Claim {
+  id                 String          @id @default(cuid())
+  companyId          String
+  relatedEntityType  String? // product | timeline-event | strategic-decision | metric | niche
+  relatedEntityId    String?
+  claimText          String          @db.Text
+  evidenceStatus     EvidenceStatus  @default(REPORTED)
+  confidence         ConfidenceLevel @default(MEDIUM)
+  verificationStatus String? // verified | pending | disputed
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  company Company       @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  sources ClaimSource[]
+
+  @@index([companyId])
+}
+
+model ClaimSource {
+  claimId           String
+  sourceId          String
+  supportingContext String?
+
+  claim  Claim  @relation(fields: [claimId], references: [id], onDelete: Cascade)
+  source Source @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  @@id([claimId, sourceId])
+}
+
+model CompetitorRelationship {
+  companyId           String
+  competitorCompanyId String
+  relationshipType    RelationshipType @default(DIRECT_COMPETITOR)
+  notes               String?
+  createdAt           DateTime         @default(now())
+
+  company    Company @relation("CompanyAsCompetitor", fields: [companyId], references: [id], onDelete: Cascade)
+  competitor Company @relation("CompanyAsReference", fields: [competitorCompanyId], references: [id], onDelete: Cascade)
+
+  @@id([companyId, competitorCompanyId])
+}
+
+model UserCollection {
+  id          String               @id @default(cuid())
+  userId      String
+  name        String
+  description String?
+  visibility  CollectionVisibility @default(PRIVATE)
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  user  User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items CollectionItem[]
+
+  @@index([userId])
+}
+
+model CollectionItem {
+  id                String   @id @default(cuid())
+  collectionId      String
+  relatedEntityType String // company | comparison | report | niche
+  relatedEntityId   String
+  addedAt           DateTime @default(now())
+
+  collection UserCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  company    Company?       @relation(fields: [relatedEntityId], references: [id], onDelete: Cascade)
+
+  @@index([collectionId])
+  @@index([relatedEntityType, relatedEntityId])
+}
+
+model SavedComparison {
+  id         String   @id @default(cuid())
+  userId     String
+  name       String
+  companyIds String // JSON array of company slugs
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Report {
+  id          String       @id @default(cuid())
+  userId      String?
+  companyId   String?
+  type        ReportType
+  status      ReportStatus @default(PENDING)
+  fileUrl     String?
+  generatedAt DateTime?
+  createdAt   DateTime     @default(now())
+
+  user    User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([companyId])
+  @@index([status])
+}
+
+model ResearchEdit {
+  id        String   @id @default(cuid())
+  userId    String
+  companyId String
+  field     String // which dossier field was edited
+  summary   String?
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId])
+  @@index([userId, createdAt])
+}

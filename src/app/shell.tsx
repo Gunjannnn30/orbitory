@@ -13,7 +13,6 @@ import {
   Save,
   FileText,
   Settings,
-  LayoutGrid,
   ChevronLeft,
   Menu,
   X,
@@ -22,6 +21,9 @@ import {
   LogOut,
   LogIn,
   User,
+  Globe,
+  Layers,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui";
 import { cn } from "@/lib/utils";
@@ -78,7 +80,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="relative min-h-dvh bg-background">
-      <div className="pointer-events-none absolute inset-0 grid-bg opacity-60" />
+      <div className="pointer-events-none absolute inset-0 grid-bg opacity-50" />
       <aside
         className={cn(
           "fixed z-40 left-0 top-0 h-full w-64 border-r border-border bg-card/70 backdrop-blur-xl transition-transform duration-300",
@@ -89,20 +91,20 @@ export function Shell({ children }: { children: React.ReactNode }) {
       >
         <div className="flex items-center justify-between h-16 px-4 border-b border-border/60">
           <Link href="/" className="flex items-center gap-2" aria-label="Orbitory home">
-            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-glow-signal">
+            <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-[0_0_40px_-12px_hsl(var(--signal)/0.8)]">
               <Star className="h-5 w-5" />
             </span>
             <span className="font-display font-semibold tracking-tight">Orbitory</span>
           </Link>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="md:hidden p-1 rounded-md text-muted-foreground hover:bg-accent/20"
+            className="md:hidden p-1 rounded-md text-muted-foreground hover:bg-accent/30"
             aria-label="Close navigation"
           >
             <X className="h-5 w-5" />
           </button>
         </div>
-        <nav className="px-3 py-4 space-y-1" aria-label="Product navigation">
+        <nav className="px-3 py-4 space-y-0.5" aria-label="Product navigation">
           {NAV.map((item) => {
             const Icon = item.icon;
             const isActive = active(item.href);
@@ -112,10 +114,10 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 href={item.href}
                 onClick={() => setSidebarOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition",
+                  "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all",
                   isActive
-                    ? "bg-primary/10 text-primary border border-primary/20"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/30",
+                    ? "bg-primary/10 text-primary border border-primary/20 shadow-[0_0_20px_-10px_hsl(var(--signal)/0.3)]"
+                    : "text-muted-foreground hover:text-foreground hover:bg-accent/30 hover:border-border/50",
                 )}
                 aria-current={isActive ? "page" : undefined}
               >
@@ -135,7 +137,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
                 document.documentElement.classList.toggle("dark", next === "dark");
                 document.documentElement.style.colorScheme = next;
               }}
-              className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/30 transition"
+              className="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-all"
               aria-label="Toggle theme"
             >
               {theme === "dark" ? (
@@ -149,14 +151,14 @@ export function Shell({ children }: { children: React.ReactNode }) {
               <>
                 <Link
                   href="/admin"
-                  className="flex items-center gap-3 rounded-lg px-3 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/30 transition"
+                  className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-accent/30 transition-all"
                 >
                   <Settings className="h-4 w-4" />
                   <span>Research workspace</span>
                 </Link>
                 <button
                   onClick={() => router.push("/api/auth/logout")}
-                  className="flex items-center gap-3 w-full rounded-lg px-3 py-2 text-sm text-danger hover:bg-danger/5 transition"
+                  className="flex items-center gap-3 w-full rounded-xl px-3 py-2.5 text-sm text-destructive hover:bg-destructive/10 transition-all"
                 >
                   <LogOut className="h-4 w-4" />
                   <span>Sign out</span>
@@ -165,7 +167,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href="/login"
-                className="flex items-center gap-3 w-full rounded-lg border border-border px-3 py-2 text-sm text-foreground hover:bg-accent transition"
+                className="flex items-center gap-3 w-full rounded-xl border border-border px-3 py-2.5 text-sm text-foreground hover:bg-accent transition-all"
               >
                 <LogIn className="h-4 w-4" />
                 <span>Sign in</span>
@@ -175,12 +177,12 @@ export function Shell({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <header className={cn("sticky top-0 z-30 border-b border-border/60 bg-background/80 backdrop-blur", sidebarOpen ? "" : "md:pl-64")}>
+      <header className={cn("sticky top-0 z-30 border-b border-border/60 bg-background/70 backdrop-blur-md", sidebarOpen ? "" : "md:pl-64")}>
         <div className="flex items-center justify-between h-16 px-4">
           <div className="flex items-center gap-3">
             <button
               onClick={() => setSidebarOpen((o) => !o)}
-              className="md:hidden p-2 rounded-md text-muted-foreground hover:bg-accent/20"
+              className="md:hidden p-1.5 rounded-md text-muted-foreground hover:bg-accent/30"
               aria-label="Open navigation"
             >
               <Menu className="h-5 w-5" />
@@ -188,7 +190,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
             {pathname !== "/" && (
               <button
                 onClick={() => router.push("/")}
-                className="p-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/20 transition"
+                className="p-1.5 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent/30 transition"
                 aria-label="Back to Universe"
               >
                 <ChevronLeft className="h-4 w-4" />
@@ -198,7 +200,7 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="hidden md:flex items-center flex-1 max-w-2xl px-4">
             <div className="relative w-full">
-              <Search className=" absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <input
                 type="search"
                 placeholder="Search companies, industries, metrics…"
@@ -223,24 +225,24 @@ export function Shell({ children }: { children: React.ReactNode }) {
 
           <div className="flex items-center gap-2">
             {session ? (
-              <button className="p-2 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent transition" aria-label="User profile">
+              <button className="p-1.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-accent/30 transition" aria-label="User profile">
                 <User className="h-5 w-5" />
               </button>
             ) : (
-              <Link href="/login" className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-glow-signal transition hover:brightness-105">
+              <Link href="/login" className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium shadow-[0_0_30px_-8px_hsl(var(--signal)/0.7)] transition hover:brightness-105">
                 Sign in
               </Link>
             )}
           </div>
         </div>
         <div className="hidden md:flex justify-center md:pl-64 pb-2">
-          <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+          <span className="text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
             Universe of Business
           </span>
         </div>
       </header>
 
-      <main className="pt-4 md:pl-64 pb-12">{children}</main>
+      <main className="pt-4 md:pl-64 pb-16">{children}</main>
 
       {isMobile && sidebarOpen && (
         <div

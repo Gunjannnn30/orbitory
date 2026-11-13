@@ -24,6 +24,23 @@ import {
   ChevronLeft,
   Menu,
   ChevronRight,
+  Clock,
+  Globe,
+  Link as LinkIcon,
+  Building,
+  Users,
+  PieChart,
+  AlertTriangle,
+  CheckCircle,
+  Clock as ClockIcon,
+  Eye,
+  ExternalLink,
+  TrendingUp,
+  TrendingDown,
+  Zap,
+  Layers,
+  Minus,
+  Globe as GlobeIcon,
 } from "lucide-react";
 
 export function cn(...inputs: ClassValue[]) {
@@ -44,9 +61,9 @@ interface PropsWithChildren {
 const buttonVariants: Record<string, string> = {
   default: "border-border bg-card text-foreground hover:bg-accent/30",
   primary:
-    "border-primary bg-primary text-primary-foreground shadow-glow-signal hover:bg-primary/90",
+    "border-primary bg-primary text-primary-foreground shadow-[0_0_40px_-12px_hsl(var(--signal)/0.8)] hover:bg-primary/90 hover:shadow-[0_0_60px_-8px_hsl(var(--signal)/0.9)] transition-all",
   ghost: "hover:bg-accent/30 hover:text-foreground",
-  danger: "border-danger/30 bg-danger/10 text-danger hover:bg-danger/20 hover:text-danger",
+  danger: "border-destructive/30 bg-destructive/10 text-destructive hover:bg-destructive/20 hover:text-destructive",
   outline: "border-border bg-transparent text-foreground hover:bg-accent/30",
 };
 
@@ -56,7 +73,10 @@ type ButtonOwnProps = BaseProps & {
   type?: "button" | "submit" | "reset";
 };
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonOwnProps & React.ButtonHTMLAttributes<HTMLButtonElement>>(
+export const Button = React.forwardRef<
+  HTMLButtonElement,
+  ButtonOwnProps & React.ButtonHTMLAttributes<HTMLButtonElement>
+>(
   ({ className, variant = "default", asChild, type = "button", ...props }, ref) => {
     if (asChild) {
       return (
@@ -68,7 +88,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonOwnProps & React
         ref={ref}
         type={type}
         className={cn(
-          "inline-flex items-center justify-center rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium transition shadow-sm focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card disabled:pointer-events-none disabled:opacity-50",
+          "inline-flex items-center justify-center rounded-xl border border-border bg-card px-4 py-2.5 text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-card disabled:pointer-events-none disabled:opacity-50",
           buttonVariants[variant],
           className,
         )}
@@ -110,9 +130,9 @@ export function Badge({ className, variant = "default", ...props }: BaseProps & 
   const variants: Record<string, string> = {
     default: "border-border bg-secondary text-secondary-foreground",
     primary: "bg-primary text-primary-foreground",
-    success: "border-green/30 bg-green/10 text-green-foreground",
-    warn: "border-amber/30 bg-amber/10 text-amber-foreground",
-    danger: "border-danger/30 bg-danger/10 text-danger",
+    success: "border-success/30 bg-success/10 text-success",
+    warn: "border-warn/30 bg-warn/10 text-warn",
+    danger: "border-destructive/30 bg-destructive/10 text-destructive",
     muted: "bg-muted text-muted-foreground",
     ghost: "border-border bg-transparent text-foreground",
   };
@@ -538,3 +558,141 @@ export const SheetTitle = ({ className, ...props }: BaseProps & PropsWithChildre
 export const SheetDescription = ({ className, ...props }: BaseProps & PropsWithChildren) => (
   <p className={cn("text-sm text-muted-foreground", className)} {...props} />
 );
+
+// ============================================================================
+// ORBITORY-SPECIFIC COMPONENTS
+// ============================================================================
+
+// --- Status badge ---
+export function StatusBadge({ status, ...props }: BaseProps & { status?: string }) {
+  const variants: Record<string, string> = {
+    ACTIVE: "bg-success/10 text-success border-success/30",
+    ACQUIRED: "bg-info/10 text-info border-info/30",
+    CLOSED: "bg-destructive/10 text-destructive border-destructive/30",
+    IPO: "bg-primary/10 text-primary border-primary/30",
+    UNKNOWN: "bg-muted text-muted-foreground border-muted/50",
+    PARTIAL: "bg-warn/10 text-warn border-warn/30",
+    RESEARCHED: "bg-success/10 text-success border-success/30",
+    UNRESEARCHED: "bg-muted text-muted-foreground border-muted/50",
+    VERIFIED: "bg-success/10 text-success border-success/30",
+    REPORTED: "bg-info/10 text-info border-info/30",
+    ESTIMATED: "bg-warn/10 text-warn border-warn/30",
+    INTERPRETATION: "bg-warn/10 text-warn border-warn/30",
+    ILLUSTRATIVE: "bg-muted text-muted-foreground border-muted/50",
+  };
+  return (
+    <Badge variant={status ? (status === "ACTIVE" ? "success" : status === "REPORTED" ? "muted" : "default") : "default"} className={variants[status ?? ""]}>
+      {status ? String(status).charAt(0).toUpperCase() + String(status).slice(1).toLowerCase() : "—"}
+    </Badge>
+  );
+}
+
+// --- Metric Card ---
+export function MetricCard({
+  title,
+  value,
+  unit,
+  category,
+  valueType,
+  definition,
+  period,
+  trend,
+}: {
+  title: string;
+  value?: string | number;
+  unit?: string;
+  category?: string;
+  valueType?: string;
+  definition?: string;
+  period?: string;
+  trend?: { direction: "up" | "down" | "neutral"; percent?: number; label?: string };
+}) {
+  const typeColors: Record<string, string> = {
+    REPORTED: "border-success/30 bg-success/10 text-success",
+    CALCULATED: "border-info/30 bg-info/10 text-info",
+    ESTIMATED: "border-warn/30 bg-warn/10 text-warn",
+    ILLUSTRATIVE: "border-muted text-muted-foreground",
+  };
+  return (
+    <div className="metric-card">
+      <div className="flex items-start justify-between mb-3">
+        <div className="flex flex-col">
+          <span className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">{category}</span>
+          <h4 className="font-display text-base font-semibold mt-0.5">{title}</h4>
+        </div>
+        <Badge variant={valueType ? (valueType === "REPORTED" ? "success" : valueType === "ILLUSTRATIVE" ? "muted" : "default") : "default"} className={typeColors[valueType ?? ""]}>
+          {valueType ? String(valueType).charAt(0).toUpperCase() + String(valueType).slice(1).toLowerCase() : "—"}
+        </Badge>
+      </div>
+      <div className="mb-3">
+        <span className="metric-card-value">{value ?? "—"}</span>
+        {unit && <span className="text-xs text-muted-foreground ml-1">{unit}</span>}
+      </div>
+      {period && (
+        <p className="text-[10px] text-muted-foreground mb-3">Period: {period}</p>
+      )}
+      {definition && (
+        <p className="text-xs text-muted-foreground line-clamp-2">{definition}</p>
+      )}
+      {trend && (
+        <div className="mt-3 flex items-center gap-1.5">
+          {trend.direction === "up" ? (
+            <TrendingUp className="h-3.5 w-3.5 text-success" />
+          ) : trend.direction === "down" ? (
+            <TrendingDown className="h-3.5 w-3.5 text-destructive" />
+          ) : (
+            <Minus className="h-3.5 w-3.5 text-muted-foreground" />
+          )}
+          <span className="text-xs text-muted-foreground">
+            {trend.label ?? (trend.percent !== undefined ? `${trend.percent > 0 ? "+" : ""}${trend.percent}%` : "—")}
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// --- Evidence / Source chip ---
+export function EvidenceChip({ status, confidence }: { status?: string; confidence?: string }) {
+  const statusColor: Record<string, string> = {
+    VERIFIED: "border-success/30 bg-success/10 text-success",
+    REPORTED: "border-info/30 bg-info/10 text-info",
+    ESTIMATED: "border-warn/30 bg-warn/10 text-warn",
+    INTERPRETATION: "border-warn/30 bg-warn/10 text-warn",
+    ILLUSTRATIVE: "border-muted text-muted-foreground",
+    UNKNOWN: "border-muted text-muted-foreground",
+  };
+  return (
+    <Badge variant={status ? (status === "VERIFIED" ? "success" : status === "REPORTED" ? "muted" : "default") : "default"} className={statusColor[status ?? ""]}>
+      {status ? String(status).charAt(0).toUpperCase() + String(status).slice(1).toLowerCase() : "—"}
+      {confidence && (
+        <span className="ml-1 text-[9px] opacity-70">[{confidence}]</span>
+      )}
+    </Badge>
+  );
+}
+
+// --- Source link ---
+export function SourceLink({ url, title, publisher }: { url: string; title: string; publisher?: string }) {
+  return (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-sm flex items-center gap-1.5">
+      <ExternalLink className="h-3 w-3" />
+      <span>{title}</span>
+      {publisher && <span className="text-muted-foreground ml-1">· {publisher}</span>}
+    </a>
+  );
+}
+
+// --- Empty State ---
+export function EmptyState({ title, description, action }: { title: string; description?: string; action?: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl border border-border bg-card p-12 text-center">
+      <div className="h-12 w-12 mx-auto rounded-full bg-muted flex items-center justify-center text-muted-foreground mb-4">
+        <Layers className="h-6 w-6" />
+      </div>
+      <h3 className="font-medium">{title}</h3>
+      {description && <p className="mt-1 text-sm text-muted-foreground">{description}</p>}
+      {action && <div className="mt-4">{action}</div>}
+    </div>
+  );
+}

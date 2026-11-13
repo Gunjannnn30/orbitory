@@ -4,60 +4,69 @@
 
 @layer base {
   :root {
-    --background: 240 14% 4%;
-    --foreground: 210 40% 96%;
-    --card: 240 12% 8%;
-    --card-foreground: 210 40% 96%;
-    --popover: 240 12% 8%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 220 90% 55%;
+    /* Deep space palette */
+    --background: 240 16% 3.5%;
+    --foreground: 210 40% 97%;
+    --card: 240 14% 6%;
+    --card-foreground: 210 40% 97%;
+    --popover: 240 14% 6%;
+    --popover-foreground: 210 40% 97%;
+    --primary: 221 83% 53%;
     --primary-foreground: 240 20% 6%;
-    --secondary: 240 10% 12%;
+    --secondary: 240 10% 11%;
     --secondary-foreground: 210 40% 88%;
-    --muted: 240 10% 11%;
-    --muted-foreground: 215 20% 60%;
-    --accent: 260 100% 70%;
+    --muted: 240 10% 9%;
+    --muted-foreground: 215 20% 56%;
+    --accent: 263 100% 68%;
     --accent-foreground: 210 40% 98%;
-    --border: 240 10% 16%;
-    --input: 240 10% 14%;
-    --ring: 220 90% 55%;
-    --signal: 220 90% 55%;
+    --destructive: 350 80% 55%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 10% 14%;
+    --input: 240 10% 12%;
+    --ring: 221 83% 53%;
+    --radius: 0.8rem;
+
+    /* Semantic */
+    --signal: 221 83% 53%;
     --signal-foreground: 210 40% 98%;
-    --danger: 350 80% 55%;
-    --danger-foreground: 210 40% 98%;
-    --bubble: 240 10% 12%;
-    --bubble-foreground: 210 40% 88%;
-    --radius: 0.85rem;
-    --font-sans: "Segoe UI Variable Text", "Segoe UI", -apple-system, BlinkMacSystemFont,
-      "Helvetica Neue", sans-serif;
-    --font-display: "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia,
-      serif;
+    --success: 142 70% 45%;
+    --success-foreground: 210 40% 98%;
+    --warn: 38 92% 50%;
+    --warn-foreground: 210 40% 98%;
+    --info: 199 89% 48%;
+    --info-foreground: 210 40% 98%;
+
+    --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --font-display: "Outfit", "Iowan Old Style", "Palatino Linotype", "Book Antiqua", Palatino, Georgia, serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, monospace;
   }
 
   .dark {
-    --background: 240 14% 4%;
-    --foreground: 210 40% 96%;
-    --card: 240 12% 8%;
-    --card-foreground: 210 40% 96%;
-    --popover: 240 12% 8%;
-    --popover-foreground: 210 40% 96%;
-    --primary: 220 90% 55%;
+    --background: 240 16% 3.5%;
+    --foreground: 210 40% 97%;
+    --card: 240 14% 6%;
+    --card-foreground: 210 40% 97%;
+    --popover: 240 14% 6%;
+    --popover-foreground: 210 40% 97%;
+    --primary: 221 83% 53%;
     --primary-foreground: 240 20% 6%;
-    --secondary: 240 10% 12%;
+    --secondary: 240 10% 11%;
     --secondary-foreground: 210 40% 88%;
-    --muted: 240 10% 11%;
-    --muted-foreground: 215 20% 60%;
-    --accent: 260 100% 70%;
+    --muted: 240 10% 9%;
+    --muted-foreground: 215 20% 56%;
+    --accent: 263 100% 68%;
     --accent-foreground: 210 40% 98%;
-    --border: 240 10% 16%;
-    --input: 240 10% 14%;
-    --ring: 220 90% 55%;
-    --signal: 220 90% 55%;
-    --signal-foreground: 210 40% 98%;
-    --danger: 350 80% 55%;
-    --danger-foreground: 210 40% 98%;
-    --bubble: 240 10% 12%;
-    --bubble-foreground: 210 40% 88%;
+    --destructive: 350 80% 55%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 240 10% 14%;
+    --input: 240 10% 12%;
+    --ring: 221 83% 53%;
+    --success: 142 70% 45%;
+    --success-foreground: 210 40% 98%;
+    --warn: 38 92% 50%;
+    --warn-foreground: 210 40% 98%;
+    --info: 199 89% 48%;
+    --info-foreground: 210 40% 98%;
   }
 
   * {
@@ -103,8 +112,17 @@
     letter-spacing: -0.02em;
   }
 
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Surface utilities */
   .surface {
     @apply border border-border/70 bg-card/60 backdrop-blur-xl;
+  }
+
+  .surface-strong {
+    @apply border border-border/100 bg-card backdrop-blur-md shadow-soft;
   }
 
   .hairline {
@@ -123,13 +141,9 @@
 
   .grid-bg {
     background-image:
-      linear-gradient(to right, hsl(var(--foreground) / 0.03) 1px, transparent 1px),
-      linear-gradient(to bottom, hsl(var(--foreground) / 0.03) 1px, transparent 1px);
+      linear-gradient(to right, hsl(var(--foreground) / 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, hsl(var(--foreground) / 0.025) 1px, transparent 1px);
     background-size: 48px 48px;
-  }
-
-  .glow-signal {
-    box-shadow: 0 0 0 1px hsl(var(--signal) / 0.25), 0 10px 40px -14px hsl(var(--signal) / 0.45);
   }
 
   .scroll-thin {
@@ -172,6 +186,20 @@
     background: linear-gradient(90deg, transparent, hsl(var(--foreground) / 0.05), transparent);
     animation: shimmer 1.6s infinite;
   }
+
+  /* Metric cards */
+  .metric-card {
+    @apply rounded-xl border border-border/60 bg-card p-5 hover:border-primary/40 transition-all;
+  }
+
+  .metric-card-value {
+    @apply font-display font-mono text-2xl font-semibold tracking-tight;
+  }
+
+  /* Badge */
+  .badge-pill {
+    @apply inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-[0.12em];
+  }
 }
 
 @keyframes shimmer {
@@ -195,6 +223,17 @@
 
   .animation-delay-300 {
     animation-delay: 300ms;
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px hsl(var(--foreground) / 0.15);
+  }
+
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
   }
 }
 
